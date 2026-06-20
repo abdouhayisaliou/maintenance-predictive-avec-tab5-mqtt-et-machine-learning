@@ -1,0 +1,845 @@
+[
+    {
+        "id": "tab_scada_cnc",
+        "type": "tab",
+        "label": "SCADA Lite CNC",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "inject_cnc",
+        "type": "inject",
+        "z": "tab_scada_cnc",
+        "d": true,
+        "name": "Simulation CNC",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "0.5",
+        "crontab": "",
+        "once": true,
+        "onceDelay": "1",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 170,
+        "y": 120,
+        "wires": [
+            [
+                "fn_generate_cnc"
+            ]
+        ]
+    },
+    {
+        "id": "fn_generate_cnc",
+        "type": "function",
+        "z": "tab_scada_cnc",
+        "d": true,
+        "name": "Générer données CNC",
+        "func": "const r = Math.random();\n\nlet state = \"NORMAL\";\n\nif (r < 0.70) {\n    state = \"NORMAL\";\n} else if (r < 0.85) {\n    state = \"FATIGUE\";\n} else if (r < 0.95) {\n    state = \"DEGRADE\";\n} else {\n    state = \"CRITIQUE\";\n}\n\nlet data = {\n    machine: \"CNC_MAZAK_SIM\",\n    timestamp: new Date().toISOString(),\n    machine_state: state\n};\n\nif (state === \"NORMAL\") {\n    data.spindle_temp = 55 + Math.random() * 15;\n    data.motor_temp = 50 + Math.random() * 12;\n    data.hydraulic_pressure = 90 + Math.random() * 25;\n    data.vibration = 0.15 + Math.random() * 0.35;\n    data.motor_current = 4 + Math.random() * 2;\n    data.spindle_speed = 1200 + Math.random() * 900;\n    data.tool_load = 35 + Math.random() * 25;\n    data.air_pressure = 6 + Math.random() * 1.2;\n    data.coolant_flow = 8 + Math.random() * 3;\n}\n\nelse if (state === \"FATIGUE\") {\n    data.spindle_temp = 70 + Math.random() * 10;\n    data.motor_temp = 62 + Math.random() * 10;\n    data.hydraulic_pressure = 115 + Math.random() * 20;\n    data.vibration = 0.55 + Math.random() * 0.35;\n    data.motor_current = 6 + Math.random() * 1.5;\n    data.spindle_speed = 1200 + Math.random() * 900;\n    data.tool_load = 55 + Math.random() * 20;\n    data.air_pressure = 5.8 + Math.random() * 1;\n    data.coolant_flow = 6 + Math.random() * 2;\n}\n\nelse if (state === \"DEGRADE\") {\n    data.spindle_temp = 80 + Math.random() * 12;\n    data.motor_temp = 72 + Math.random() * 12;\n    data.hydraulic_pressure = 135 + Math.random() * 25;\n    data.vibration = 0.9 + Math.random() * 0.45;\n    data.motor_current = 7.5 + Math.random() * 2;\n    data.spindle_speed = 1200 + Math.random() * 900;\n    data.tool_load = 70 + Math.random() * 18;\n    data.air_pressure = 5.2 + Math.random() * 1;\n    data.coolant_flow = 4 + Math.random() * 2;\n}\n\nelse if (state === \"CRITIQUE\") {\n    data.spindle_temp = 92 + Math.random() * 15;\n    data.motor_temp = 88 + Math.random() * 12;\n    data.hydraulic_pressure = 160 + Math.random() * 25;\n    data.vibration = 1.3 + Math.random() * 0.6;\n    data.motor_current = 9 + Math.random() * 3;\n    data.spindle_speed = 1200 + Math.random() * 900;\n    data.tool_load = 85 + Math.random() * 15;\n    data.air_pressure = 4.8 + Math.random() * 0.8;\n    data.coolant_flow = 2 + Math.random() * 2;\n}\n\nmsg.payload = data;\nreturn msg;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 420,
+        "y": 120,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "fn_temp",
+        "type": "function",
+        "z": "tab_scada_cnc",
+        "name": "Température broche",
+        "func": "let data = msg.payload;\n\nif (typeof data === \"string\") {\n    data = JSON.parse(data);\n}\n\nif (data.spindle_temp === undefined) return null;\n\nmsg.payload = Number(data.spindle_temp).toFixed(1);\nmsg.topic = \"Température broche\";\nreturn msg;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 690,
+        "y": 150,
+        "wires": [
+            [
+                "gauge_temp"
+            ]
+        ]
+    },
+    {
+        "id": "fn_pressure",
+        "type": "function",
+        "z": "tab_scada_cnc",
+        "name": "Pression hydraulique",
+        "func": "let data = msg.payload;\n\nif (typeof data === \"string\") {\n    data = JSON.parse(data);\n}\n\nif (data.hydraulic_pressure === undefined) return null;\n\nmsg.payload = Number(data.hydraulic_pressure).toFixed(1);\nmsg.topic = \"Pression hydraulique\";\nreturn msg;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 700,
+        "y": 210,
+        "wires": [
+            [
+                "gauge_pressure"
+            ]
+        ]
+    },
+    {
+        "id": "fn_vibration",
+        "type": "function",
+        "z": "tab_scada_cnc",
+        "name": "Vibration",
+        "func": "let data = msg.payload;\n\nif (typeof data === \"string\") {\n    data = JSON.parse(data);\n}\n\nif (data.vibration === undefined) return null;\n\nmsg.payload = Number(data.vibration).toFixed(2);\nmsg.topic = \"Vibration\";\nreturn msg;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 660,
+        "y": 270,
+        "wires": [
+            [
+                "gauge_vibration"
+            ]
+        ]
+    },
+    {
+        "id": "fn_current",
+        "type": "function",
+        "z": "tab_scada_cnc",
+        "name": "Courant moteur",
+        "func": "let data = msg.payload;\n\nif (typeof data === \"string\") {\n    data = JSON.parse(data);\n}\n\nif (data.motor_current === undefined) return null;\n\nmsg.payload = Number(data.motor_current).toFixed(1);\nmsg.topic = \"Courant moteur\";\nreturn msg;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 680,
+        "y": 330,
+        "wires": [
+            [
+                "gauge_current"
+            ]
+        ]
+    },
+    {
+        "id": "fn_state",
+        "type": "function",
+        "z": "tab_scada_cnc",
+        "name": "État machine",
+        "func": "const state = msg.payload.machine_state;\nmsg.payload = state === \"NORMAL\" ? \"🟢 MACHINE NORMALE\" : \"🔴 ALERTE ANOMALIE CNC\";\nreturn msg;",
+        "outputs": 1,
+        "x": 670,
+        "y": 390,
+        "wires": [
+            [
+                "text_state"
+            ]
+        ]
+    },
+    {
+        "id": "fn_chart_temp",
+        "type": "function",
+        "z": "tab_scada_cnc",
+        "name": "Courbe température",
+        "func": "msg.payload = Number(msg.payload.spindle_temp.toFixed(1));\nmsg.topic = \"Température broche\";\nreturn msg;",
+        "outputs": 1,
+        "x": 680,
+        "y": 460,
+        "wires": [
+            [
+                "chart_temp"
+            ]
+        ]
+    },
+    {
+        "id": "fn_chart_vibration",
+        "type": "function",
+        "z": "tab_scada_cnc",
+        "name": "Courbe vibration",
+        "func": "msg.payload = Number(msg.payload.vibration.toFixed(2));\nmsg.topic = \"Vibration\";\nreturn msg;",
+        "outputs": 1,
+        "x": 680,
+        "y": 520,
+        "wires": [
+            [
+                "chart_vibration"
+            ]
+        ]
+    },
+    {
+        "id": "gauge_temp",
+        "type": "ui_gauge",
+        "z": "tab_scada_cnc",
+        "name": "Température broche",
+        "group": "group_scada",
+        "order": 1,
+        "width": 6,
+        "height": 4,
+        "gtype": "gage",
+        "title": "Température broche",
+        "label": "°C",
+        "format": "{{value}}",
+        "min": 0,
+        "max": 120,
+        "colors": [
+            "#00b500",
+            "#e6e600",
+            "#ca3838"
+        ],
+        "seg1": "75",
+        "seg2": "95",
+        "diff": false,
+        "className": "",
+        "x": 950,
+        "y": 150,
+        "wires": []
+    },
+    {
+        "id": "gauge_pressure",
+        "type": "ui_gauge",
+        "z": "tab_scada_cnc",
+        "name": "Pression hydraulique",
+        "group": "group_scada",
+        "order": 2,
+        "width": 6,
+        "height": 4,
+        "gtype": "gage",
+        "title": "Pression hydraulique",
+        "label": "bar",
+        "format": "{{value}}",
+        "min": 0,
+        "max": 200,
+        "colors": [
+            "#00b500",
+            "#e6e600",
+            "#ca3838"
+        ],
+        "seg1": "130",
+        "seg2": "160",
+        "x": 960,
+        "y": 210,
+        "wires": []
+    },
+    {
+        "id": "gauge_vibration",
+        "type": "ui_gauge",
+        "z": "tab_scada_cnc",
+        "name": "Vibration",
+        "group": "group_scada",
+        "order": 3,
+        "width": 6,
+        "height": 4,
+        "gtype": "gage",
+        "title": "Vibration",
+        "label": "mm/s",
+        "format": "{{value}}",
+        "min": 0,
+        "max": 2,
+        "colors": [
+            "#00b500",
+            "#e6e600",
+            "#ca3838"
+        ],
+        "seg1": "0.7",
+        "seg2": "1.2",
+        "x": 930,
+        "y": 270,
+        "wires": []
+    },
+    {
+        "id": "gauge_current",
+        "type": "ui_gauge",
+        "z": "tab_scada_cnc",
+        "name": "Courant moteur",
+        "group": "group_scada",
+        "order": 4,
+        "width": 6,
+        "height": 4,
+        "gtype": "gage",
+        "title": "Courant moteur",
+        "label": "A",
+        "format": "{{value}}",
+        "min": 0,
+        "max": 15,
+        "colors": [
+            "#00b500",
+            "#e6e600",
+            "#ca3838"
+        ],
+        "seg1": "7",
+        "seg2": "10",
+        "x": 940,
+        "y": 330,
+        "wires": []
+    },
+    {
+        "id": "text_state",
+        "type": "ui_text",
+        "z": "tab_scada_cnc",
+        "group": "group_scada",
+        "order": 5,
+        "width": 12,
+        "height": 1,
+        "name": "État machine",
+        "label": "État machine",
+        "format": "{{msg.payload}}",
+        "layout": "row-spread",
+        "x": 940,
+        "y": 390,
+        "wires": []
+    },
+    {
+        "id": "chart_temp",
+        "type": "ui_chart",
+        "z": "tab_scada_cnc",
+        "name": "Courbe température",
+        "group": "group_charts",
+        "order": 1,
+        "width": 12,
+        "height": 5,
+        "label": "Évolution température broche",
+        "chartType": "line",
+        "legend": "false",
+        "xformat": "HH:mm:ss",
+        "interpolate": "linear",
+        "nodata": "En attente de données",
+        "dot": false,
+        "ymin": "0",
+        "ymax": "120",
+        "removeOlder": "2",
+        "removeOlderPoints": "",
+        "removeOlderUnit": "60",
+        "cutout": 0,
+        "useOneColor": false,
+        "colors": [
+            "#1f77b4",
+            "#aec7e8",
+            "#ff7f0e",
+            "#2ca02c",
+            "#98df8a",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "outputs": 1,
+        "x": 960,
+        "y": 460,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "chart_vibration",
+        "type": "ui_chart",
+        "z": "tab_scada_cnc",
+        "name": "Courbe vibration",
+        "group": "group_charts",
+        "order": 2,
+        "width": 12,
+        "height": 5,
+        "label": "Évolution vibration",
+        "chartType": "line",
+        "legend": "false",
+        "xformat": "HH:mm:ss",
+        "interpolate": "linear",
+        "nodata": "En attente de données",
+        "dot": false,
+        "ymin": "0",
+        "ymax": "2",
+        "removeOlder": "2",
+        "removeOlderPoints": "",
+        "removeOlderUnit": "60",
+        "cutout": 0,
+        "useOneColor": false,
+        "colors": [
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5",
+            "#8c564b",
+            "#c49c94",
+            "#e377c2",
+            "#f7b6d2",
+            "#7f7f7f"
+        ],
+        "outputs": 1,
+        "x": 950,
+        "y": 520,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "4ad7a4563f5268c5",
+        "type": "mqtt in",
+        "z": "tab_scada_cnc",
+        "name": "",
+        "topic": "factory/cnc/data",
+        "qos": "0",
+        "datatype": "auto-detect",
+        "broker": "885eaf060376d293",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 160,
+        "y": 440,
+        "wires": [
+            [
+                "fn_temp",
+                "fn_pressure",
+                "fn_vibration",
+                "fn_current",
+                "fn_state",
+                "fn_chart_temp",
+                "fn_chart_vibration",
+                "7589daab2b2fcd15",
+                "0e26a214e90a25ac"
+            ]
+        ]
+    },
+    {
+        "id": "963e4b52b944b089",
+        "type": "function",
+        "z": "tab_scada_cnc",
+        "name": "Etat",
+        "func": "const etat = msg.payload.prediction;\n\nif (etat === \"NORMAL\") {\n    msg.payload = \"🟢 NORMAL\";\n}\nelse if (etat === \"FATIGUE\") {\n    msg.payload = \"🟡 FATIGUE\";\n}\nelse if (etat === \"DEGRADE\") {\n    msg.payload = \"🟠 DEGRADE\";\n}\nelse {\n    msg.payload = \"🔴 CRITIQUE\";\n}\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 490,
+        "y": 860,
+        "wires": [
+            [
+                "adc48d023bc9b3d1"
+            ]
+        ]
+    },
+    {
+        "id": "28c116fc03dd96bf",
+        "type": "mqtt in",
+        "z": "tab_scada_cnc",
+        "name": "",
+        "topic": "factory/cnc/prediction",
+        "qos": "2",
+        "datatype": "auto-detect",
+        "broker": "885eaf060376d293",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 200,
+        "y": 840,
+        "wires": [
+            [
+                "963e4b52b944b089",
+                "59ba67a9220bfe7e",
+                "386c847ee4555c89",
+                "b07e4b229ef0ace7"
+            ]
+        ]
+    },
+    {
+        "id": "adc48d023bc9b3d1",
+        "type": "ui_text",
+        "z": "tab_scada_cnc",
+        "group": "group_scada",
+        "order": 5,
+        "width": 0,
+        "height": 0,
+        "name": "",
+        "label": "État IA",
+        "format": "{{msg.payload}}",
+        "layout": "row-spread",
+        "className": "",
+        "style": false,
+        "font": "",
+        "fontSize": 16,
+        "color": "#000000",
+        "x": 750,
+        "y": 920,
+        "wires": []
+    },
+    {
+        "id": "5a3b321cd6d41e1c",
+        "type": "function",
+        "z": "tab_scada_cnc",
+        "d": true,
+        "name": "IA Simulée",
+        "func": "const temp = msg.payload.spindle_temp;\nconst vib = msg.payload.vibration;\nconst pressure = msg.payload.hydraulic_pressure;\n\nlet prediction = \"NORMAL\";\n\nif (temp > 90 || vib > 1.3) {\n    prediction = \"CRITIQUE\";\n}\nelse if (temp > 80 || vib > 0.9) {\n    prediction = \"DEGRADE\";\n}\nelse if (temp > 70 || vib > 0.6) {\n    prediction = \"FATIGUE\";\n}\n\nmsg.payload = {\n    prediction: prediction,\n    confidence: Math.floor(Math.random() * 10) + 90\n};\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 470,
+        "y": 600,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "7589daab2b2fcd15",
+        "type": "mqtt out",
+        "z": "tab_scada_cnc",
+        "name": "",
+        "topic": "factory/cnc/prediction",
+        "qos": "",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "885eaf060376d293",
+        "x": 740,
+        "y": 580,
+        "wires": []
+    },
+    {
+        "id": "ad1eaa3fac645a72",
+        "type": "ui_gauge",
+        "z": "tab_scada_cnc",
+        "name": "",
+        "group": "group_scada",
+        "order": 6,
+        "width": 0,
+        "height": 0,
+        "gtype": "gage",
+        "title": "Santé Machine",
+        "label": "units",
+        "format": "{{value}}",
+        "min": 0,
+        "max": "100",
+        "colors": [
+            "#00b500",
+            "#e6e600",
+            "#ca3838"
+        ],
+        "seg1": "",
+        "seg2": "",
+        "diff": false,
+        "className": "",
+        "x": 1020,
+        "y": 880,
+        "wires": []
+    },
+    {
+        "id": "59ba67a9220bfe7e",
+        "type": "function",
+        "z": "tab_scada_cnc",
+        "name": "Health Score",
+        "func": "let data = msg.payload;\n\nif (typeof data === \"string\") {\n    data = JSON.parse(data);\n}\n\nmsg.payload = data.health_score;\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 770,
+        "y": 840,
+        "wires": [
+            [
+                "ad1eaa3fac645a72"
+            ]
+        ]
+    },
+    {
+        "id": "386c847ee4555c89",
+        "type": "function",
+        "z": "tab_scada_cnc",
+        "name": "Alert",
+        "func": "let data = msg.payload;\n\nif (typeof data === \"string\") {\n    data = JSON.parse(data);\n}\n\nconst prediction = data.prediction;\nconst score = data.health_score;\n\nif (prediction === \"NORMAL\") {\n    msg.payload = \"🟢 Aucun risque — machine stable\";\n}\nelse if (prediction === \"FATIGUE\") {\n    msg.payload = \"🟡 Surveillance renforcée — signes de fatigue\";\n}\nelse if (prediction === \"DEGRADE\") {\n    msg.payload = \"🟠 Maintenance recommandée — dérive détectée\";\n}\nelse if (prediction === \"CRITIQUE\") {\n    msg.payload = \"🔴 Arrêt imminent — intervention urgente\";\n}\nelse {\n    msg.payload = \"⚪ État inconnu\";\n}\n\nmsg.payload += \" | Santé : \" + score + \"%\";\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 550,
+        "y": 980,
+        "wires": [
+            [
+                "4644aaac8c91da81"
+            ]
+        ]
+    },
+    {
+        "id": "4644aaac8c91da81",
+        "type": "ui_text",
+        "z": "tab_scada_cnc",
+        "group": "group_scada",
+        "order": 7,
+        "width": 0,
+        "height": 0,
+        "name": "",
+        "label": "Alerte maintenance",
+        "format": "{{msg.payload}}",
+        "layout": "row-spread",
+        "className": "",
+        "style": false,
+        "font": "",
+        "fontSize": 16,
+        "color": "#000000",
+        "x": 990,
+        "y": 980,
+        "wires": []
+    },
+    {
+        "id": "76389b36e4ea212c",
+        "type": "switch",
+        "z": "tab_scada_cnc",
+        "name": "",
+        "property": "payload.prediction",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "CRITIQUE",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 1,
+        "x": 730,
+        "y": 680,
+        "wires": [
+            [
+                "640d29cfdcc1e7aa",
+                "caeaf5973414fd5b"
+            ]
+        ]
+    },
+    {
+        "id": "640d29cfdcc1e7aa",
+        "type": "function",
+        "z": "tab_scada_cnc",
+        "name": "Préparer email alerte",
+        "func": "const data = msg.payload;\n\nmsg.topic = \"[ALERTE CNC] État critique détecté\";\n\nmsg.payload =\n    `Bonjour,\n\nUne anomalie critique a été détectée sur la machine CNC supervisée.\n\nMachine : ${data.machine || \"CNC_MAZAK_SIM\"}\nÉtat : ${data.prediction}\nSanté machine : ${data.health_score} %\nConfiance du modèle : ${data.confidence} %\nRaison : ${data.reason}\n\nAction recommandée :\nInspection immédiate de la broche, du circuit hydraulique, des vibrations et du système de refroidissement.\n\nDate : ${data.timestamp}\n\nSystème :\nSCADA Lite CNC - MQTT / Python ML / Node-RED\n`;\nnode.warn(\"EMAIL ENVOYE\");\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 960,
+        "y": 640,
+        "wires": [
+            [
+                "18a4853f22a27cf2",
+                "dc819b7573dff1d3"
+            ]
+        ]
+    },
+    {
+        "id": "18a4853f22a27cf2",
+        "type": "e-mail",
+        "z": "tab_scada_cnc",
+        "server": "smtp.gmail.com",
+        "port": "465",
+        "authtype": "BASIC",
+        "saslformat": true,
+        "token": "oauth2Response.access_token",
+        "secure": true,
+        "tls": true,
+        "name": "saliougarbaabdoulhayichatri@gmail.com",
+        "dname": "",
+        "x": 1260,
+        "y": 700,
+        "wires": []
+    },
+    {
+        "id": "b07e4b229ef0ace7",
+        "type": "json",
+        "z": "tab_scada_cnc",
+        "name": "",
+        "property": "payload",
+        "action": "obj",
+        "pretty": false,
+        "x": 470,
+        "y": 700,
+        "wires": [
+            [
+                "76389b36e4ea212c"
+            ]
+        ]
+    },
+    {
+        "id": "dc819b7573dff1d3",
+        "type": "debug",
+        "z": "tab_scada_cnc",
+        "name": "debug 1",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1240,
+        "y": 580,
+        "wires": []
+    },
+    {
+        "id": "caeaf5973414fd5b",
+        "type": "function",
+        "z": "tab_scada_cnc",
+        "name": "function Préparer SMS Vonage",
+        "func": "const data = msg.payload;\n\nconst apiKey = \"e7d63c04\";\nconst apiSecret = \"kdPamkELhyp5NFZY\";\n\nconst to = \"33753950719\"; // ton numéro sans +\nconst from = \"SCADA-CNC\";\n\nconst text = `ALERTE CNC CRITIQUE\nMachine: ${data.machine || \"CNC_MAZAK_SIM\"}\nSante: ${data.health_score}%\nEtat: ${data.prediction}\nAction: verifier broche, vibration, pression et refroidissement.`;\n\nmsg.method = \"POST\";\nmsg.url = \"https://rest.nexmo.com/sms/json\";\n\nmsg.headers = {\n    \"Content-Type\": \"application/x-www-form-urlencoded\"\n};\n\nmsg.payload =\n    \"api_key=\" + encodeURIComponent(apiKey) +\n    \"&api_secret=\" + encodeURIComponent(apiSecret) +\n    \"&to=\" + encodeURIComponent(to) +\n    \"&from=\" + encodeURIComponent(from) +\n    \"&text=\" + encodeURIComponent(text);\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 970,
+        "y": 780,
+        "wires": [
+            [
+                "6be74eb0edd9b580"
+            ]
+        ]
+    },
+    {
+        "id": "6be74eb0edd9b580",
+        "type": "http request",
+        "z": "tab_scada_cnc",
+        "name": "",
+        "method": "use",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 1310,
+        "y": 780,
+        "wires": [
+            [
+                "b47e8fbc61d7355b"
+            ]
+        ]
+    },
+    {
+        "id": "b47e8fbc61d7355b",
+        "type": "debug",
+        "z": "tab_scada_cnc",
+        "name": "debug 2",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1400,
+        "y": 880,
+        "wires": []
+    },
+    {
+        "id": "0e26a214e90a25ac",
+        "type": "debug",
+        "z": "tab_scada_cnc",
+        "name": "debug 3",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 260,
+        "y": 600,
+        "wires": []
+    },
+    {
+        "id": "group_scada",
+        "type": "ui_group",
+        "name": "SCADA CNC",
+        "tab": "tab_dashboard",
+        "order": 1,
+        "disp": true,
+        "width": "12",
+        "collapse": false
+    },
+    {
+        "id": "group_charts",
+        "type": "ui_group",
+        "name": "Courbes temps réel",
+        "tab": "tab_dashboard",
+        "order": 2,
+        "disp": true,
+        "width": "12",
+        "collapse": false
+    },
+    {
+        "id": "885eaf060376d293",
+        "type": "mqtt-broker",
+        "name": "",
+        "broker": "test.mosquitto.org",
+        "port": 1883,
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": 4,
+        "keepalive": 60,
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthRetain": "false",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closeRetain": "false",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    },
+    {
+        "id": "tab_dashboard",
+        "type": "ui_tab",
+        "name": "CNC Monitoring",
+        "icon": "dashboard",
+        "disabled": false,
+        "hidden": false
+    },
+    {
+        "id": "6f0d4f53e2aa5797",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "node-red-dashboard": "3.6.6",
+            "node-red-node-email": "5.2.4"
+        }
+    }
+]
