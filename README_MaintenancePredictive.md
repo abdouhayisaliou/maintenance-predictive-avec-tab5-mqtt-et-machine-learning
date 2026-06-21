@@ -125,7 +125,7 @@ Dans Node-RED : menu **☰ → Import**, sélectionner `flowscada.json`, puis co
 
 L’apprentissage du modèle se fait en deux grandes phases : une phase **hors ligne** d’entraînement du modèle, puis une phase **temps réel** d’utilisation du modèle pour prédire l’état de la machine.
 
-![Architecture d’apprentissage du modèle IA](architecture_apprentissage.png)
+![Architecture d’apprentissage du modèle IA](architecture-apprentissage.png)
 
 ### Phase 1 — Apprentissage hors ligne
 
