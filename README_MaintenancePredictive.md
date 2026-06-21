@@ -4,7 +4,7 @@ Système de **maintenance prédictive Industrie 4.0** simulant la supervision d'
 
 > Projet pédagogique conçu pour illustrer une chaîne IoT → MQTT → IA → Supervision → Alerting de bout en bout.
 
-![Architecture globale du système](./architecture.jpeg)
+![Architecture globale du système](architecture.jpeg)
 
 ---
 
