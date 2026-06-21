@@ -121,7 +121,36 @@ Ouvrir `tab5.ino` dans l'Arduino IDE, renseigner votre SSID/mot de passe Wi-Fi, 
 Dans Node-RED : menu **☰ → Import**, sélectionner `flowscada.json`, puis configurer les identifiants SMTP et Vonage dans les nœuds correspondants. Déployer le flow et ouvrir le dashboard (`/ui`).
 
 ---
+## Architecture d’apprentissage du modèle IA
 
+L’apprentissage du modèle se fait en deux grandes phases : une phase **hors ligne** d’entraînement du modèle, puis une phase **temps réel** d’utilisation du modèle pour prédire l’état de la machine.
+
+![Architecture d’apprentissage du modèle IA](architecture_apprentissage.png)
+
+### Phase 1 — Apprentissage hors ligne
+
+Les données issues de la TAB5, de la simulation CNC ou de Node-RED sont enregistrées dans `machine_history.csv`.  
+Ce fichier sert de base d’apprentissage au script `train_model.py`.
+
+Le script :
+- charge les données avec `pandas` ;
+- sélectionne les variables d’entrée : `temp`, `vibration`, `pressure`, `current`, `coolant` ;
+- sépare les données en jeu d’entraînement et jeu de test ;
+- entraîne un modèle `RandomForestClassifier` ;
+- évalue les performances avec l’accuracy, le rapport de classification et la matrice de confusion ;
+- sauvegarde le modèle dans `cnc_predictive_model.pkl`.
+
+### Phase 2 — Prédiction en temps réel
+
+Une fois le modèle entraîné, le script `cnc_predictor.py` le charge avec `joblib`.  
+Il écoute le topic MQTT `factory/cnc/data`, reçoit les mesures envoyées par la TAB5, construit un échantillon de données, prédit l’état de la machine, calcule le score de santé, puis publie le résultat sur `factory/cnc/prediction`.
+
+Le résultat est ensuite affiché sur :
+- la TAB5 ;
+- le dashboard Node-RED ;
+- les alertes Email / SMS en cas d’état critique.
+
+  ---
 ## Modèle de Machine Learning
 
 | Élément | Détail |
